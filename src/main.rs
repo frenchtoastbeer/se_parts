@@ -28,6 +28,10 @@ struct Opt {
     /// Blueprint to check
     #[structopt(short, long)]
     blueprint_name: String,
+
+    /// Report blocks with recipies from the blueprint, helpful for identifying issues with block count
+    #[structopt(short, long)]
+    report: bool,
 }
 
 fn load_recipies(blockfile: &str, mut block_recipies: HashMap<String, HashMap<String, i64>>) -> HashMap<String, HashMap<String, i64>> {
@@ -126,10 +130,6 @@ fn load_recipies(blockfile: &str, mut block_recipies: HashMap<String, HashMap<St
                         components[1].parse::<i64>().unwrap(),
                     );
                 }
-                // if current_SubtypeId == "LargeBlockBatteryBlock" {
-                //     println!("hit! {} {}", &current_SubtypeId,
-                //         String::from_utf8_lossy(e.name()))
-                // }
             }
             Err(e) => panic!(
                 "Error at position {}: {:?}",
@@ -259,11 +259,11 @@ fn main() {
         }
     }
 
-    println!("Component totals:\n{:#?}", &all_components);
-
-    //println!("{:?}", &blocks);
-    println!("{} blocks with matching component recipies", count);
-    //println!("Missed blocks:\n{:#?}", missed_blocks);
-    //println!("hit blocks:\n{:#?}", hit_blocks);
-    //println!("{:#?}", block_recipies.get("LargeBlockBatteryBlock"));
+    if opt.report {
+        println!("Missed blocks:\n{:#?}", missed_blocks);
+        println!("hit blocks:\n{:#?}", hit_blocks);
+    } else {
+        println!("Component totals:\n{:#?}", &all_components);
+        println!("{} blocks with matching component recipies", count);
+    }
 }
