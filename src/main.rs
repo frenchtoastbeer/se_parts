@@ -21,9 +21,12 @@ struct Opt {
     )]
     blocks_directory: String,
 
-    /// Blueprints path
-    #[structopt(long)]
-    blueprints_folder: Option<PathBuf>,
+    /// Blueprints directory, relative to your users home folder
+    #[structopt(
+        long,
+        default_value = "\\AppData\\Roaming\\SpaceEngineers\\Blueprints\\local\\"
+    )]
+    blueprints_directory: String,
 
     /// Blueprint to check
     #[structopt(short, long)]
@@ -34,7 +37,10 @@ struct Opt {
     report: bool,
 }
 
-fn load_recipies(blockfile: &str, mut block_recipies: HashMap<String, HashMap<String, i64>>) -> HashMap<String, HashMap<String, i64>> {
+fn load_recipies(
+    blockfile: &str,
+    mut block_recipies: HashMap<String, HashMap<String, i64>>,
+) -> HashMap<String, HashMap<String, i64>> {
     // load the components recipie for all blocks in existence
     let mut component_reader = Reader::from_file(blockfile).unwrap();
     component_reader.trim_text(true);
@@ -64,7 +70,7 @@ fn load_recipies(blockfile: &str, mut block_recipies: HashMap<String, HashMap<St
                 }
                 b"Components" => {
                     in_Components = true;
-                },
+                }
                 b"Component" => {
                     let components = e
                         .attributes()
@@ -176,7 +182,7 @@ fn add_component(
 fn main() {
     let opt = Opt::from_args();
     let home_dir = dirs::home_dir().unwrap();
-    let blueprints_dir = "\\AppData\\Roaming\\SpaceEngineers\\Blueprints\\local\\";
+    let blueprints_dir = opt.blueprints_directory;
     let blueprint_file = format!(
         "{}{}{}\\bp.sbc",
         home_dir.to_str().unwrap(),

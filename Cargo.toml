@@ -1,6 +1,6 @@
 [package]
 name = "se_parts"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["BANNAN, RAYMOND L <rb704u@us.att.com>"]
 edition = "2018"
 
