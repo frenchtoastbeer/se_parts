@@ -1,0 +1,12 @@
+[package]
+name = "se_parts"
+version = "0.1.0"
+authors = ["BANNAN, RAYMOND L <rb704u@us.att.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+quick-xml = "0.18"
+structopt = "0.3"
+dirs = "2.0"
