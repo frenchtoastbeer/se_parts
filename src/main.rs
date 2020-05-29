@@ -2,9 +2,7 @@ use dirs;
 use quick_xml::events::Event;
 use quick_xml::Reader;
 use std::fs;
-use std::path::PathBuf;
 use structopt::StructOpt;
-
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -266,8 +264,8 @@ fn main() {
     }
 
     if opt.report {
-        println!("Missed blocks:\n{:#?}", missed_blocks);
-        println!("hit blocks:\n{:#?}", hit_blocks);
+        println!("Blocks without recipeies:\n{:#?}", missed_blocks);
+        println!("Blocks with recipies:\n{:#?}", hit_blocks);
     } else {
         println!("Component totals:\n{:#?}", &all_components);
         println!("{} blocks with matching component recipies", count);

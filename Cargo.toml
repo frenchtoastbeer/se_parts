@@ -1,7 +1,7 @@
 [package]
 name = "se_parts"
 version = "0.1.1"
-authors = ["BANNAN, RAYMOND L <rb704u@us.att.com>"]
+authors = ["Raymond Bannan <raymondbannan@protonmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
