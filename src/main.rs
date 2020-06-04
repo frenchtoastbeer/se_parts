@@ -54,6 +54,9 @@ fn load_recipies(
     let mut in_TypeId = false;
 
     #[allow(non_snake_case)]
+    let mut in_ProducedGases = false;
+
+    #[allow(non_snake_case)]
     let mut current_SubtypeId = String::new();
 
     #[allow(non_snake_case)]
@@ -62,13 +65,16 @@ fn load_recipies(
         match component_reader.read_event(&mut component_buf) {
             Ok(Event::Start(ref e)) => match e.name() {
                 b"SubtypeId" => {
-                    if !in_Components {
+                    if !in_Components && !in_ProducedGases {
                         in_SubtypeId = true;
                     }
-                }
+                },
                 b"Components" => {
                     in_Components = true;
-                }
+                },
+                b"ProducedGases" => {
+                    in_ProducedGases = true;
+                },
                 b"Component" => {
                     let components = e
                         .attributes()
@@ -86,8 +92,9 @@ fn load_recipies(
                     );
                 }
                 b"TypeId" => {
-                    if !in_Components {
+                    if !in_Components&& !in_ProducedGases {
                         in_TypeId = true;
+                        current_SubtypeId = "".to_string();
                     }
                 }
                 _ => (),
@@ -95,7 +102,13 @@ fn load_recipies(
             Ok(Event::End(ref e)) => match e.name() {
                 b"SubtypeId" => {
                     in_SubtypeId = false;
-                }
+                    if current_SubtypeId.is_empty() {
+                        current_SubtypeId = current_TypeId.clone();
+                    }
+                },
+                b"ProducedGases" => {
+                    in_ProducedGases = false;
+                },
                 b"Components" => {
                     in_Components = false;
                 }
@@ -194,11 +207,18 @@ fn main() {
     let mut block_recipies = HashMap::new();
     let paths = fs::read_dir(opt.blocks_directory).unwrap();
     for path in paths {
+        let path = format!("{}", path.unwrap().path().display());
         block_recipies = load_recipies(
-            &format!("{}", path.unwrap().path().display()),
+            &format!("{}", path),
             block_recipies,
         );
     }
+
+    // for (block, recipie) in &block_recipies {
+    //     if block.contains("Oxygen") {
+    //         println!("{}:{:#?}", block, recipie);
+    //     }
+    // }
 
     let mut count = 0;
     let mut buf = Vec::new();
@@ -208,24 +228,61 @@ fn main() {
     let mut in_SubTypeName = false;
 
     let mut missed_blocks = HashSet::new();
-    let mut hit_blocks = HashSet::new();
+    let mut hit_blocks = HashMap::new();
     loop {
         match reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => match e.name() {
                 b"SubtypeName" => {
                     in_SubTypeName = true;
-                }
+                },
+                b"MyObjectBuilder_CubeBlock" => {
+                    let components = e
+                        .attributes()
+                        .map(|a| {
+                            a.unwrap()
+                                .unescape_and_decode_value(&reader)
+                                .unwrap()
+                        })
+                        .collect::<Vec<String>>();
+                    let value = components.get(0);
+                    if value.is_some() { 
+                        let xsitype = value.unwrap().to_string();
+                        if xsitype == "MyObjectBuilder_OxygenGenerator" {
+                            let potential_block = "OxygenGenerator".to_string();
+                            if !block_recipies.contains_key(&potential_block) {
+                                missed_blocks.insert(potential_block.clone());
+                            } else {
+                                if hit_blocks.contains_key(&potential_block) {
+                                    hit_blocks.insert(potential_block.clone(), hit_blocks.get(&potential_block).unwrap() + 1);
+                                } else {
+                                    hit_blocks.insert(potential_block.clone(), 1);
+                                }
+                                blocks.push(potential_block);
+                                count += 1;
+                            }
+                        }
+                    }
+                },
                 _ => (),
             },
             Ok(Event::End(ref e)) => match e.name() {
                 b"SubtypeName" => {
                     in_SubTypeName = false;
-                }
+                },
                 _ => (),
             },
+            // Ok(Event::Empty(e)) => {
+            //     // Sometimes SubtypeId is empty, if so use the TypeId instead
+            //     if String::from_utf8_lossy(e.name()) == "SubtypeId" {
+            //         if last_component == "MyObjectBuilder_OxygenGenerator" {
+
+            //         }
+            //     }
+            // },
             Ok(Event::Text(e)) => {
                 let mut potential_block = e.unescape_and_decode(&reader).unwrap();
                 // name corrections for block SubtypeID mis-alignment
+                // MyObjectBuilder_OxygenGenerator
                 if potential_block == "WideLargeCameraBlock" {
                     potential_block = "LargeCameraBlock".to_string();
                 }
@@ -236,7 +293,11 @@ fn main() {
                     missed_blocks.insert(potential_block.clone());
                 }
                 if in_SubTypeName && block_recipies.contains_key(&potential_block) {
-                    hit_blocks.insert(potential_block.clone());
+                    if hit_blocks.contains_key(&potential_block) {
+                        hit_blocks.insert(potential_block.clone(), hit_blocks.get(&potential_block).unwrap() + 1);
+                    } else {
+                        hit_blocks.insert(potential_block.clone(), 1);
+                    }
                     blocks.push(potential_block);
                     count += 1;
                 }
