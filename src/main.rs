@@ -328,7 +328,7 @@ fn main() {
         println!("Blocks without recipeies:\n{:#?}", missed_blocks);
         println!("Blocks with recipies:\n{:#?}", hit_blocks);
     } else {
-        println!("Component totals:\n{:#?}", &all_components);
+        println!("{} component totals:\n{:#?}", &opt.blueprint_name, &all_components);
         println!("{} blocks with matching component recipies", count);
     }
 }
